@@ -16,7 +16,7 @@ MODEL_PATH = "weights/best.pt"
 if not os.path.exists(MODEL_PATH):
     os.makedirs("weights", exist_ok=True)
     print("Downloading model...")
-    gdown.download("https://drive.google.com/file/d/1v1uiDq-_iE7qFhrPGXCfd75B_QNKErO2/view?usp=sharing", MODEL_PATH)
+    urllib.request.urlretrieve("https://huggingface.co/RahulBhargav77/pest-detection-model/blob/main/best.pt", MODEL_PATH)
 
 # === Load YOLOv11 model ===
 yolo_model = YOLO(MODEL_PATH)
