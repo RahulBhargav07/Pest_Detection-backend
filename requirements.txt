@@ -3,5 +3,6 @@ uvicorn
 torch
 torchvision
 Pillow
+gdown
 ultralytics==8.3.40
 clip-anytorch
