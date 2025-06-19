@@ -1,8 +1,7 @@
 services:
   - type: web
-    name: pest-live-ws-api
+    name: pest-detection-api
     env: python
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
-    region: oregon
-    plan: starter
+    startCommand: uvicorn app:app --host 0.0.0.0 --port 10000
