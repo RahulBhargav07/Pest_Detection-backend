@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: insect-backend
+    name: insect-api
     runtime: python
     buildCommand: ""
     startCommand: python app.py
