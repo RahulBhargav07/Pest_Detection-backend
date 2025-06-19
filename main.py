@@ -1,27 +1,45 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
+from flask import Flask, request, jsonify, send_file
 from PIL import Image
-import torch
-import io
+import base64
 import os
-from ultralytics import YOLO
-import clip
-import torchvision.transforms as transforms
-import urllib.request  # <-- Add this
+from io import BytesIO
 
-app = FastAPI()
+from main import create_annotated_image  # Import your function from your existing file
 
-# === Ensure YOLO model file exists (download if not) ===
-MODEL_PATH = "weights/best.pt"
-if not os.path.exists(MODEL_PATH):
-    os.makedirs("weights", exist_ok=True)
-    print("Downloading model...")
-    urllib.request.urlretrieve("https://huggingface.co/RahulBhargav77/pest-detection-model/blob/main/best.pt", MODEL_PATH)
+app = Flask(__name__)
 
-# === Load YOLOv11 model ===
-yolo_model = YOLO(MODEL_PATH)
+@app.route('/detect', methods=['POST'])
+def detect():
+    try:
+        # Read base64 image and predictions from request JSON
+        data = request.get_json()
+        img_data = base64.b64decode(data['image_base64'])
+        predictions = data['predictions']
 
-# === Load CLIP model ===
-device = "cuda" if torch.cuda.is_available() else "cpu"
-clip_model, clip_preprocess = clip.load("ViT-B/32", device=device)
-clip_model.eval()
+        # Save temporary image
+        image_path = "temp.jpg"
+        with open(image_path, "wb") as f:
+            f.write(img_data)
+
+        # Annotate
+        annotated_img = create_annotated_image(image_path, predictions)
+        os.remove(image_path)  # Clean up
+
+        if annotated_img:
+            # Save to buffer and return base64
+            buffer = BytesIO()
+            annotated_img.save(buffer, format="JPEG")
+            img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+            return jsonify({"status": "success", "annotated_image_base64": img_str})
+
+        return jsonify({"status": "error", "message": "Annotation failed"}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/')
+def home():
+    return "🦋 Insect Detection API Running"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
